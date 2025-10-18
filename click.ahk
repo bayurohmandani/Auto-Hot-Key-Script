@@ -1,33 +1,38 @@
+; Hapus ; di awal baris untuk mengaktifkan hotkey
+; --------------------
+; Koordinat
 ax := 500
 ay := 300
 
-;bx :=
-;by :=
+; bx := 
+; by := 
 
-;cx :=
-;cy :=
+; cx := 
+; cy := 
 
-;dx :=
-;dy :=
-; -------------------
+; dx := 
+; dy := 
+
+; --------------------
+; Hotkey
 F5::Click(ax, ay)
-;F6::Click(bx, by)
-;F7::Click(cx, cy)
-;F8::Click(dx, dy)
-;F9::Click(ex, ey)
-; --------------------
-; --------------------
-;x :=
-;y :=
+; F6::Click(bx, by)
+; F7::Click(cx, cy)
+; F8::Click(dx, dy)
+; F9::Click(ex, ey)
 
-;xx ;=
-;yy :=
+; --------------------
+; Contoh blok aksi kompleks
+; x := 
+; y := 
+; xx := 
+; yy := 
 
-;F12::
-;{
-;  Send "{Enter}"
-;  Sleep 200
-;  Click(x, y)
-;  Sleep 150
-;  Click(xx, yy)
-;}
+; F12::{
+;     Send("{Enter}")
+;     Sleep(200)
+;     Click(x, y)
+;     Sleep(150)
+;     Click(xx, yy)
+; }
+
