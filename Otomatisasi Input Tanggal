@@ -30,7 +30,7 @@ Jalankan(*) {
     TBT := Tanggal . Bulan . Tahun
     TB := Tanggal . Bulan
 
-    MsgBox "Gunakan F2 atau Numpad '-' `n untuk memasukkan tanggal lengkap (DDMMYYYY), `n `n tekan tombol '+' dua kali untuk Y"
+    MsgBox "Gunakan Numpad '-' (tombol pengurangan) `n untuk memasukkan tanggal lengkap (DDMMYYYY), `n `n tekan tombol '+' dua kali untuk Y"
 }
 
 Hentikan(*) {
