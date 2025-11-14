@@ -1,40 +1,46 @@
 
 ; Copy1 - F7
 F7::
-Clipboard := ""
-Send ^c
-ClipWait
-clipboard1 := Clipboard
-return
+{
+    Clipboard := ""
+    Send ^c
+    ClipWait
+    clipboard1 := Clipboard
+}
 
 ; Copy2 - F8
 F8::
-Clipboard := ""
-Send ^c
-ClipWait
-clipboard2 := Clipboard
-return
+{
+    Clipboard := ""
+    Send ^c
+    ClipWait
+    clipboard2 := Clipboard
+}
 
 ; Copy3 - F9
 F9::
-Clipboard := ""
-Send ^c
-ClipWait
-clipboard3 := Clipboard
-return
+{
+    Clipboard := ""
+    Send ^c
+    ClipWait
+    clipboard3 := Clipboard
+}
 
 ; Paste1 - F10
 F10::
-SendInput %clipboard1%
-return
+{
+    SendInput %clipboard1%
+}
 
 ; Paste2 - F11
 F11::
-SendInput %clipboard2%
-return
+{
+    SendInput %clipboard2%
+}
 
 ; Paste3 - F12
 F12::
-SendInput %clipboard3%
-return
+{
+    SendInput %clipboard3%
+}
  
