@@ -1,0 +1,40 @@
+
+; Copy1 - F7
+F7::
+Clipboard := ""
+Send ^c
+ClipWait
+clipboard1 := Clipboard
+return
+
+; Copy2 - F8
+F8::
+Clipboard := ""
+Send ^c
+ClipWait
+clipboard2 := Clipboard
+return
+
+; Copy3 - F9
+F9::
+Clipboard := ""
+Send ^c
+ClipWait
+clipboard3 := Clipboard
+return
+
+; Paste1 - F10
+F10::
+SendInput %clipboard1%
+return
+
+; Paste2 - F11
+F11::
+SendInput %clipboard2%
+return
+
+; Paste3 - F12
+F12::
+SendInput %clipboard3%
+return
+ 
