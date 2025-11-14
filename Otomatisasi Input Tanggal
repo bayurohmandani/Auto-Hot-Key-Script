@@ -1,5 +1,6 @@
 #Requires AutoHotKey v2.0
-MyGui := gui()
+
+MyGui := Gui("Caption", "Otomatisasi Tanggal") ; Atur title di sini
 MyGui.Add("Text",, "SELAMAT DATANG ^_^")
 MyGui.Add("Text",, "Masukkan Tanggal (DD): ")
 InputTanggal := MyGui.AddEdit("w200")
