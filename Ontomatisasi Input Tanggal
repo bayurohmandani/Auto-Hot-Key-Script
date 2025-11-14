@@ -1,0 +1,70 @@
+#Requires AutoHotKey v2.0
+MyGui := gui()
+MyGui.Add("Text",, "Masukkan Tanggal (DD): ")
+InputTanggal := MyGui.AddEdit("w200")
+MyGui.Add("Text",, "Masukkan Bulan (MM): ")
+InputBulan := MyGui.AddEdit("w200")
+MyGui.Add("Text",, "Masukkan Tahun (YYYY): ")
+InputTahun := MyGui.AddEdit("w200")
+
+Tombol := MyGui.Add("Button","w200", "Jalankan Otomatisasi")
+TombolStop := MyGui.Add("Button","w200", "Hentikan Otomatisasi") ; Tombol baru
+
+MyGui.show()
+
+Tombol.OnEvent("Click", Jalankan)
+TombolStop.OnEvent("Click", Hentikan)
+
+Jalankan(*) {
+    global Tanggal, Bulan, Tahun, TBT, TB
+    Tanggal := InputTanggal.Value
+    Bulan := InputBulan.Value
+    Tahun := InputTahun.Value
+
+    ; Tambahkan 0 di depan jika hanya 1 digit
+    if (StrLen(Tanggal) = 1)
+        Tanggal := "0" . Tanggal
+    if (StrLen(Bulan) = 1)
+        Bulan := "0" . Bulan
+
+    TBT := Tanggal . Bulan . Tahun
+    TB := Tanggal . Bulan
+
+    MsgBox "Gunakan F2 atau Numpad '-' `n untuk memasukkan tanggal lengkap (DDMMYYYY), `n `n tekan tombol '+' dua kali untuk Y"
+}
+
+Hentikan(*) {
+    MsgBox "Otomatisasi dihentikan."
+    ExitApp
+}
+
+; Hotkeys
+F2:: Send(TBT)          ; Kirim DDMMYYYY
+:*:+::Y                 ; Tekan '+' dua kali untuk Y
+NumpadSub::Send(TBT) ; Tekan Numpad '-' untuk kirim TBT
+
+; Huruf + TB (DDMM)
+A::send("A" . TB)
+B::send("B" . TB)
+C::send("C" . TB)
+D::send("D" . TB)
+E::send("E" . TB)
+F::send("F" . TB)
+G::send("G" . TB)
+H::send("H" . TB)
+I::send("I" . TB)
+J::send("J" . TB)
+K::send("K" . TB)
+L::send("L" . TB)
+M::send("M" . TB)
+N::send("N" . TB)
+O::send("O" . TB)
+P::send("P" . TB)
+Q::send("Q" . TB)
+R::send("R" . TB)
+S::send("S" . TB)
+U::send("U" . TB)
+V::send("V" . TB)
+W::send("W" . TB)
+X::send("X" . TB)
+Z::send("Z" . TB)
