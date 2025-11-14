@@ -1,4 +1,4 @@
-#Persistent
+; === MENU KLIK KANAN ===
 Menu, MyMenu, Add, Copy Referensi, CopyReferensi
 Menu, MyMenu, Add, Copy Nama, CopyNama
 Menu, MyMenu, Add, Copy Alamat, CopyAlamat
@@ -14,6 +14,7 @@ Menu, MyMenu, Add, Paste Alamat, PasteAlamat
     return
 }
 
+; === COPY DARI MENU ===
 CopyReferensi:
 {
     Clipboard := ""
@@ -44,6 +45,7 @@ CopyAlamat:
     return
 }
 
+; === PASTE DARI MENU ===
 PasteReferensi:
 {
     SendInput %referensi%
@@ -61,49 +63,54 @@ PasteAlamat:
     SendInput %alamat%
     return
 }
- 
-; Copy1 - F7
+
+; === COPY DENGAN F7–F9 ===
 F7::
 {
     Clipboard := ""
     Send ^c
     ClipWait
-    clipboard1 := Clipboard
+    referensi := Clipboard
+    TrayTip, Copy Berhasil, Referensi (F7) telah disalin., 1
+    return
 }
 
-; Copy2 - F8
 F8::
 {
     Clipboard := ""
     Send ^c
     ClipWait
-    clipboard2 := Clipboard
+    nama := Clipboard
+    TrayTip, Copy Berhasil, Nama (F8) telah disalin., 1
+    return
 }
 
-; Copy3 - F9
 F9::
 {
     Clipboard := ""
     Send ^c
     ClipWait
-    clipboard3 := Clipboard
+    alamat := Clipboard
+    TrayTip, Copy Berhasil, Alamat (F9) telah disalin., 1
+    return
 }
 
-; Paste1 - F10
+; === PASTE DENGAN F10–F12 ===
 F10::
 {
-    SendInput %clipboard1%
+    SendInput %referensi%
+    return
 }
 
-; Paste2 - F11
 F11::
 {
-    SendInput %clipboard2%
+    SendInput %nama%
+    return
 }
 
-; Paste3 - F12
 F12::
 {
-    SendInput %clipboard3%
+    SendInput %alamat%
+    return
 }
  
