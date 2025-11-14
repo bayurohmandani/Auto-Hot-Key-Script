@@ -1,4 +1,67 @@
+#Persistent
+Menu, MyMenu, Add, Copy Referensi, CopyReferensi
+Menu, MyMenu, Add, Copy Nama, CopyNama
+Menu, MyMenu, Add, Copy Alamat, CopyAlamat
+Menu, MyMenu, Add
+Menu, MyMenu, Add, Paste Referensi, PasteReferensi
+Menu, MyMenu, Add, Paste Nama, PasteNama
+Menu, MyMenu, Add, Paste Alamat, PasteAlamat
 
+~RButton::
+{
+    MouseGetPos, xpos, ypos
+    Menu, MyMenu, Show, %xpos%, %ypos%
+    return
+}
+
+CopyReferensi:
+{
+    Clipboard := ""
+    Send ^c
+    ClipWait
+    referensi := Clipboard
+    TrayTip, Copy Berhasil, Referensi telah disalin., 1
+    return
+}
+
+CopyNama:
+{
+    Clipboard := ""
+    Send ^c
+    ClipWait
+    nama := Clipboard
+    TrayTip, Copy Berhasil, Nama telah disalin., 1
+    return
+}
+
+CopyAlamat:
+{
+    Clipboard := ""
+    Send ^c
+    ClipWait
+    alamat := Clipboard
+    TrayTip, Copy Berhasil, Alamat telah disalin., 1
+    return
+}
+
+PasteReferensi:
+{
+    SendInput %referensi%
+    return
+}
+
+PasteNama:
+{
+    SendInput %nama%
+    return
+}
+
+PasteAlamat:
+{
+    SendInput %alamat%
+    return
+}
+ 
 ; Copy1 - F7
 F7::
 {
