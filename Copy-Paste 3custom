@@ -38,7 +38,7 @@ CopyAlamat(*) {
 PasteReferensi(*) {
     if referensi != "" {
         A_Clipboard := referensi
-        Sleep(100)
+        Sleep(300)
         Send("^v")
     }
 }
@@ -46,7 +46,7 @@ PasteReferensi(*) {
 PasteNama(*) {
     if nama != "" {
         A_Clipboard := nama
-        Sleep(100)
+        Sleep(300)
         Send("^v")
     }
 }
@@ -54,7 +54,7 @@ PasteNama(*) {
 PasteAlamat(*) {
     if alamat != "" {
         A_Clipboard := alamat
-        Sleep(100)
+        Sleep(300)
         Send("^v")
     }
 }
