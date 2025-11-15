@@ -1,12 +1,5 @@
 #Requires AutoHotkey v2.0
 
-; === HOTKEY NUMPAD ADD ===
-NumpadAdd:: {
-    Send("halo dunia")
-    Send("{Enter}")
-    Send("apa kabar")
-}
-
 ; === BUAT MENU KLIK KANAN ===
 MyMenu := Menu()
 MyMenu.Add("Copy Referensi", CopyReferensi)
