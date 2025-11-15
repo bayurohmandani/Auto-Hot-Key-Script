@@ -1,116 +1,99 @@
-; === MENU KLIK KANAN ===
-Menu, MyMenu, Add, Copy Referensi, CopyReferensi
-Menu, MyMenu, Add, Copy Nama, CopyNama
-Menu, MyMenu, Add, Copy Alamat, CopyAlamat
-Menu, MyMenu, Add
-Menu, MyMenu, Add, Paste Referensi, PasteReferensi
-Menu, MyMenu, Add, Paste Nama, PasteNama
-Menu, MyMenu, Add, Paste Alamat, PasteAlamat
+#Requires AutoHotkey v2.0
 
-~RButton::
-{
-    MouseGetPos, xpos, ypos
-    Menu, MyMenu, Show, %xpos%, %ypos%
-    return
+; === HOTKEY NUMPAD ADD ===
+NumpadAdd:: {
+    Send("halo dunia")
+    Send("{Enter}")
+    Send("apa kabar")
 }
 
-; === COPY DARI MENU ===
-CopyReferensi:
-{
-    Clipboard := ""
-    Send ^c
-    ClipWait
-    referensi := Clipboard
-    TrayTip, Copy Berhasil, Referensi telah disalin., 1
-    return
+; === BUAT MENU KLIK KANAN ===
+MyMenu := Menu()
+MyMenu.Add("Copy Referensi", CopyReferensi)
+MyMenu.Add("Copy Nama", CopyNama)
+MyMenu.Add("Copy Alamat", CopyAlamat)
+MyMenu.Add() ; Separator
+MyMenu.Add("Paste Referensi", PasteReferensi)
+MyMenu.Add("Paste Nama", PasteNama)
+MyMenu.Add("Paste Alamat", PasteAlamat)
+
+~RButton:: {
+    MouseGetPos(&xpos, &ypos)
+    MyMenu.Show(xpos, ypos)
 }
 
-CopyNama:
-{
-    Clipboard := ""
-    Send ^c
-    ClipWait
-    nama := Clipboard
-    TrayTip, Copy Berhasil, Nama telah disalin., 1
-    return
+; === COPY HANDLER ===
+CopyReferensi(*) {
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait()
+    global referensi := A_Clipboard
+    TrayTip("Copy Berhasil", "Referensi telah disalin.", 1)
 }
 
-CopyAlamat:
-{
-    Clipboard := ""
-    Send ^c
-    ClipWait
-    alamat := Clipboard
-    TrayTip, Copy Berhasil, Alamat telah disalin., 1
-    return
+CopyNama(*) {
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait()
+    global nama := A_Clipboard
+    TrayTip("Copy Berhasil", "Nama telah disalin.", 1)
 }
 
-; === PASTE DARI MENU ===
-PasteReferensi:
-{
-    SendInput %referensi%
-    return
+CopyAlamat(*) {
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait()
+    global alamat := A_Clipboard
+    TrayTip("Copy Berhasil", "Alamat telah disalin.", 1)
 }
 
-PasteNama:
-{
-    SendInput %nama%
-    return
+; === PASTE HANDLER ===
+PasteReferensi(*) {
+    Send(referensi)
 }
 
-PasteAlamat:
-{
-    SendInput %alamat%
-    return
+PasteNama(*) {
+    Send(nama)
+}
+
+PasteAlamat(*) {
+    Send(alamat)
 }
 
 ; === COPY DENGAN F7–F9 ===
-F7::
-{
-    Clipboard := ""
-    Send ^c
-    ClipWait
-    referensi := Clipboard
-    TrayTip, Copy Berhasil, Referensi (F7) telah disalin., 1
-    return
+F7:: {
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait()
+    global referensi := A_Clipboard
+    TrayTip("Copy Berhasil", "Referensi (F7) telah disalin.", 1)
 }
 
-F8::
-{
-    Clipboard := ""
-    Send ^c
-    ClipWait
-    nama := Clipboard
-    TrayTip, Copy Berhasil, Nama (F8) telah disalin., 1
-    return
+F8:: {
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait()
+    global nama := A_Clipboard
+    TrayTip("Copy Berhasil", "Nama (F8) telah disalin.", 1)
 }
 
-F9::
-{
-    Clipboard := ""
-    Send ^c
-    ClipWait
-    alamat := Clipboard
-    TrayTip, Copy Berhasil, Alamat (F9) telah disalin., 1
-    return
+F9:: {
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait()
+    global alamat := A_Clipboard
+    TrayTip("Copy Berhasil", "Alamat (F9) telah disalin.", 1)
 }
 
 ; === PASTE DENGAN F10–F12 ===
-F10::
-{
-    SendInput %referensi%
-    return
+F10:: {
+    Send(referensi)
 }
 
-F11::
-{
-    SendInput %nama%
-    return
+F11:: {
+    Send(nama)
 }
 
-F12::
-{
-    SendInput %alamat%
-    return
+F12:: {
+    Send(alamat)
 }
- 
