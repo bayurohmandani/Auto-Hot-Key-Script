@@ -16,29 +16,29 @@ MyMenu.Add("Paste Alamat (F12)", PasteAlamat)
 
 CopyReferensi(*) {
     Send("^c")
-    Sleep(500)
     global referensi := A_Clipboard
+    Sleep(300)
     A_Clipboard := ""
 }
 
 CopyNama(*) {
     Send("^c")
-    Sleep(500)
     global nama := A_Clipboard
+    Sleep(300)
     A_Clipboard := ""
 }
 
 CopyAlamat(*) {
     Send("^c")
-    Sleep(500)
     global alamat := A_Clipboard
+    Sleep(300)
     A_Clipboard := ""
 }
 
 PasteReferensi(*) {
     if referensi != "" {
         A_Clipboard := referensi
-        Sleep(300)
+        Sleep(100)
         Send("^v")
     }
 }
@@ -46,7 +46,7 @@ PasteReferensi(*) {
 PasteNama(*) {
     if nama != "" {
         A_Clipboard := nama
-        Sleep(300)
+        Sleep(100)
         Send("^v")
     }
 }
@@ -54,7 +54,7 @@ PasteNama(*) {
 PasteAlamat(*) {
     if alamat != "" {
         A_Clipboard := alamat
-        Sleep(300)
+        Sleep(100)
         Send("^v")
     }
 }
