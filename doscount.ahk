@@ -2,5 +2,5 @@
 Enter:: {
  SendInput("{Enter}")
  Sleep 200
- SndInput("^a")
+ SendInput("^a")
 }
