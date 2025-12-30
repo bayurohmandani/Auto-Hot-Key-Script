@@ -1,0 +1,43 @@
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+
+; Membuat deteksi ketikan secara global
+ih := InputHook("V") ; "V" artinya ketikan Anda tetap muncul di layar (Visible)
+ih.OnChar := CheckSequence
+ih.Start()
+
+CheckSequence(ih, char) {
+    static buffer := ""
+    buffer .= char
+    ; Hanya simpan 3 karakter terakhir dalam memori (untuk "0.1")
+    if StrLen(buffer) > 3 {
+        buffer := SubStr(buffer, -3)
+    }
+
+    if (buffer = "0.1") {
+        inputCommand("Tambahan")
+    }
+    else if (buffer = "0.2") {
+        inputCommand("Duotambahan")
+    }
+    else if (buffer = "0.3") {
+        inputCommand("Tretambahan")
+    }
+    else if (buffer = "0.4") {
+        inputCommand("Batangan")
+    }
+}
+
+inputCommand(warehouse) {
+        Send("{BackSpace 3}")
+        Sleep(50) ; Jeda sebentar agar stabil
+        Send("Online")
+        Sleep(100) ; Jeda ekstra agar dropdown sempat merespon
+        Send("{Tab}")
+        Sleep(100)
+        Send(warehouse)
+        Sleep(100)
+        Send("{Tab}")
+        buffer := "" ; Kosongkan buffer setelah berhasil
+}
