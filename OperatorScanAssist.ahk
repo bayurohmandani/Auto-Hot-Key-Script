@@ -62,20 +62,20 @@ inputCommand(warehouse) {
     Sleep(50)
     
     ; Atur kecepatan ketik (Sesuaikan 40ms jika ERP Anda lambat)
-   ; SetKeyDelay(10, 10)
+    SetKeyDelay(5, 5)
     
     ; Isi Branch
     SendEvent("Online")
-    Sleep(200) ; Jeda agar dropdown ERP muncul
+    Sleep(50) ; Jeda agar dropdown ERP muncul
     Send("{Tab}")
     
     ; Isi Warehouse
-    Sleep(200)
+    Sleep(50)
     SendEvent(warehouse)
-    Sleep(200)
+    Sleep(50)
     Send("{Tab}")
     
     ; Selesai, kosongkan buffer dan mulai rekam lagi
-    ;global_buffer := ""
+    global_buffer := ""
     ih.Start()
 }
