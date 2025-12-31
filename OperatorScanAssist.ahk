@@ -22,10 +22,12 @@ global global_buffer := ""
 ~Enter::ResetBuffer()
 
 ; Reset buffer jika menekan Esc (batal)
+~Tab::ResetBuffer()
 ~Esc::ResetBuffer()
-
+F5::Reload()
 ResetBuffer() {
     global global_buffer
+    ih.Start()
     global_buffer := ""
 }
 
@@ -51,15 +53,16 @@ CheckSequence(ih, char) {
 
 ; --- EKSEKUSI INPUT ---
 inputCommand(warehouse) {
+    ih.Stop()
     global global_buffer
-    ih.Stop() ; Berhenti mendengarkan agar ketikan script tidak masuk buffer
+    ;ih.Stop() ; Berhenti mendengarkan agar ketikan script tidak masuk buffer
     
     ; Hapus pemicu "0.1"
-    Send("{BackSpace 3}")
+    SendEvent("{BackSpace 3}")
     Sleep(50)
     
     ; Atur kecepatan ketik (Sesuaikan 40ms jika ERP Anda lambat)
-    SetKeyDelay(40, 40)
+   ; SetKeyDelay(10, 10)
     
     ; Isi Branch
     SendEvent("Online")
@@ -73,6 +76,6 @@ inputCommand(warehouse) {
     Send("{Tab}")
     
     ; Selesai, kosongkan buffer dan mulai rekam lagi
-    global_buffer := ""
+    ;global_buffer := ""
     ih.Start()
 }
