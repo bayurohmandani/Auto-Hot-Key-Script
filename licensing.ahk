@@ -1,64 +1,98 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; ===============================
-; KONFIGURASI
-; ===============================
-LICENSE_URL := "https://raw.githubusercontent.com/bayurohmandani/Auto-Hot-Key-Script/main/control.json"
-CACHE_DIR   := A_AppData "\MyApp"
-CACHE_FILE  := CACHE_DIR "\license.dat" ; Ganti ekstensi agar tidak mencurigakan
-CHECK_INTERVAL := 86400
-
-if !DirExist(CACHE_DIR)
-    DirCreate(CACHE_DIR)
-
-; ===============================
-; STARTUP CHECK
-; ===============================
-if !IsCacheValid(CACHE_FILE, CHECK_INTERVAL) {
-    try {
-        ; Download ke memori dulu, lalu encode sebelum simpan
-        whr := ComObject("WinHttp.WinHttpRequest.5.1")
-        whr.Open("GET", LICENSE_URL, false)
-        whr.Send()
-        
-        if (whr.Status == 200) {
-            rawJson := whr.ResponseText
-            ; Simpan dalam bentuk Base64
-            FileOpen(CACHE_FILE, "w").Write(Base64Encode(rawJson))
-        }
-    } catch {
-        if !FileExist(CACHE_FILE) {
-            MsgBox("Gagal memverifikasi lisensi. Koneksi internet diperlukan.", "Error")
-            ExitApp()
-        }
+; ==============================================================================
+; 1. CEK PARAMETER (Untuk Fast Reload)
+; ==============================================================================
+IsSkipped := false
+for arg in A_Args {
+    if (arg = "-skip") {
+        IsSkipped := true
+        break
     }
 }
 
-; Baca dan Decode
-try {
-    encodedData := FileRead(CACHE_FILE)
-    decodedJson := Base64Decode(encodedData)
-    
-    if !IsLicenseAllowed(decodedJson)
+; ==============================================================================
+; 2. KONFIGURASI
+; ==============================================================================
+LICENSE_URL := "https://raw.githubusercontent.com/bayurohmandani/Auto-Hot-Key-Script/main/control.json"
+CACHE_DIR   := A_AppData "\MyApp"
+CACHE_FILE  := CACHE_DIR "\license.dat"
+CHECK_INTERVAL := 86400 ; 1 hari (detik)
+
+; ==============================================================================
+; 3. LOGIKA STARTUP (Hanya jalan jika tidak di-skip)
+; ==============================================================================
+if (!IsSkipped) {
+    if !DirExist(CACHE_DIR)
+        DirCreate(CACHE_DIR)
+
+    ; Download jika cache tidak valid
+    if !IsCacheValid(CACHE_FILE, CHECK_INTERVAL) {
+        try {
+            whr := ComObject("WinHttp.WinHttpRequest.5.1")
+            whr.Open("GET", LICENSE_URL, false)
+            whr.Send()
+            
+            if (whr.Status == 200) {
+                rawJson := whr.ResponseText
+                ; Simpan dalam bentuk Base64 (Enkripsi Ringan)
+                FileOpen(CACHE_FILE, "w").Write(Base64Encode(rawJson))
+            }
+        } catch {
+            if !FileExist(CACHE_FILE) {
+                MsgBox("Gagal memverifikasi lisensi secara online.", "Error")
+                ExitApp()
+            }
+        }
+    }
+
+    ; Baca dan Verifikasi Lisensi
+    try {
+        encodedData := FileRead(CACHE_FILE)
+        decodedJson := Base64Decode(encodedData)
+        
+        if !IsLicenseAllowed(decodedJson)
+            ExitApp()
+    } catch {
+        MsgBox("Data lisensi rusak atau tidak valid.")
         ExitApp()
-} catch {
-    MsgBox("File lisensi rusak.")
-    ExitApp()
+    }
 }
 
-MsgBox("Aplikasi Berhasil Dijalankan!", "Sukses", "Iconi")
+; ==============================================================================
+; 4. MAIN SCRIPT (Logika Utama Anda di Sini)
+; ==============================================================================
+MsgBox("Aplikasi Berhasil Dijalankan!`nStatus: " (IsSkipped ? "Fast Boot (Skip Check)" : "Normal Boot (Checked)"), "Success")
 
-; ===============================
-; FUNCTIONS
-; ===============================
+; Hotkey Contoh untuk Reload Cepat
+F5::FastReload()
+
+; Watchdog Contoh
+SetTimer(Watchdog, 15000)
+
+Watchdog() {
+    ; Jika butuh reload otomatis karena suatu kondisi:
+    if (A_TickCount > 0x7FFFFFF0)
+        FastReload()
+}
+
+; ==============================================================================
+; 5. FUNCTIONS
+; ==============================================================================
+
+FastReload() {
+    ; Menjalankan ulang script dengan parameter -skip
+    Run('"' A_AhkPath '" /f "' A_ScriptFullPath '" -skip')
+}
 
 IsLicenseAllowed(jsonContent) {
+    ; Cek Status Enabled
     if InStr(jsonContent, '"enabled": false') {
         ShowMessage(jsonContent)
         return false
     }
-
+    ; Cek Tanggal Expiry
     if RegExMatch(jsonContent, '"expiry":\s*"([\d-]+)"', &m) {
         if (FormatTime(, "yyyy-MM-dd") > m[1]) {
             ShowMessage(jsonContent)
@@ -70,7 +104,7 @@ IsLicenseAllowed(jsonContent) {
 
 ShowMessage(json) {
     msg := RegExMatch(json, '"message":\s*"(.+?)"', &m) ? m[1] : "Akses ditolak."
-    MsgBox(msg, "Lisensi")
+    MsgBox(msg, "Informasi Lisensi")
 }
 
 IsCacheValid(filePath, maxAge) {
@@ -84,26 +118,24 @@ Base64Encode(string) {
     sLen := StrPut(string, "UTF-8")
     buf := Buffer(sLen)
     StrPut(string, buf, "UTF-8")
-    
     out := ""
     i := 0
     while (i < sLen - 1) {
         v := (NumGet(buf, i, "UChar") << 16) | (NumGet(buf, i+1, "UChar") << 8) | NumGet(buf, i+2, "UChar")
-        out .= SubStr(code, ((v >> 18) & 63) + 1, 1)
-            .  SubStr(code, ((v >> 12) & 63) + 1, 1)
-            .  SubStr(code, ((v >> 6) & 63) + 1, 1)
-            .  SubStr(code, (v & 63) + 1, 1)
+        out .= SubStr(code, ((v >> 18) & 63) + 1, 1) . SubStr(code, ((v >> 12) & 63) + 1, 1) 
+            .  SubStr(code, ((v >> 6) & 63) + 1, 1) . SubStr(code, (v & 63) + 1, 1)
         i += 3
     }
     return out
 }
 
 Base64Decode(s) {
-    static code := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    ; Decoding sederhana untuk keperluan proteksi file lokal
-    ; Menggunakan Windows Crypt32 untuk hasil yang lebih solid
-    size := StrLen(RTrim(s, "=")) * 3 // 4
-    bin := Buffer(size)
-    DllCall("crypt32\CryptStringToBinary", "Str", s, "UInt", 0, "UInt", 1, "Ptr", bin, "UInt*", &size, "Ptr", 0, "Ptr", 0)
-    return StrGet(bin, size, "UTF-8")
+    if !s
+        return ""
+    nLen := StrLen(s)
+    if !DllCall("crypt32\CryptStringToBinary", "Str", s, "UInt", nLen, "UInt", 1, "Ptr", 0, "UInt*", &outLen := 0, "Ptr", 0, "Ptr", 0)
+        return ""
+    buf := Buffer(outLen)
+    DllCall("crypt32\CryptStringToBinary", "Str", s, "UInt", nLen, "UInt", 1, "Ptr", buf, "UInt*", &outLen, "Ptr", 0, "Ptr", 0)
+    return StrGet(buf, outLen, "UTF-8")
 }
