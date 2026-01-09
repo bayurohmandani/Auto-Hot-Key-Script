@@ -4,7 +4,7 @@
 ; ===============================
 ; KONFIGURASI
 ; ===============================
-LICENSE_URL := "https://raw.githubusercontent.com/USERNAME/REPO/main/control.json"
+LICENSE_URL := "https://raw.githubusercontent.com/bayurohmandani/REPO/main/control.json"
 CACHE_DIR   := A_AppData "\MyApp"
 CACHE_FILE  := CACHE_DIR "\license.dat" ; Ganti ekstensi agar tidak mencurigakan
 CHECK_INTERVAL := 86400
