@@ -2,140 +2,73 @@
 #SingleInstance Force
 
 ; ==============================================================================
-; 1. CEK PARAMETER (Untuk Fast Reload)
+; 0. SAKELAR ONLINE & SISTEM LISENSI
 ; ==============================================================================
-IsSkipped := false
-for arg in A_Args {
-    if (arg = "-skip") {
-        IsSkipped := true
-        break
+VerifikasiLisensi(ManualCheck := false) {
+    static URL  := "https://raw.githubusercontent.com/bayurohmandani/Auto-Hot-Key-Script/main/control.json"
+    local TmpDir := EnvGet("TEMP") "\SemarAutomation"
+    local TmpFile := TmpDir "\license_cache.json"
+    local HariIni := FormatTime(, "yyyyMMdd")
+   
+    if !DirExist(TmpDir)
+        DirCreate(TmpDir)
+
+    ; Jika cek manual (Ctrl+L), kita paksa download ulang agar data fresh
+    DownloadBaru := ManualCheck
+    if !DownloadBaru && FileExist(TmpFile) {
+        WaktuFile := FileGetTime(TmpFile, "M")
+        if (SubStr(WaktuFile, 1, 8) != HariIni)
+            DownloadBaru := true
+    } else if !FileExist(TmpFile) {
+        DownloadBaru := true
     }
-}
 
-; ==============================================================================
-; 2. KONFIGURASI
-; ==============================================================================
-LICENSE_URL := "https://raw.githubusercontent.com/bayurohmandani/Auto-Hot-Key-Script/main/control.json"
-CACHE_DIR   := A_AppData "\MyApp"
-CACHE_FILE  := CACHE_DIR "\license.dat"
-CHECK_INTERVAL := 86400 ; 1 hari (detik)
-
-; ==============================================================================
-; 3. LOGIKA STARTUP (Hanya jalan jika tidak di-skip)
-; ==============================================================================
-if (!IsSkipped) {
-    if !DirExist(CACHE_DIR)
-        DirCreate(CACHE_DIR)
-
-    ; Download jika cache tidak valid
-    if !IsCacheValid(CACHE_FILE, CHECK_INTERVAL) {
+    if (DownloadBaru) {
         try {
-            whr := ComObject("WinHttp.WinHttpRequest.5.1")
-            whr.Open("GET", LICENSE_URL, false)
-            whr.Send()
-            
-            if (whr.Status == 200) {
-                rawJson := whr.ResponseText
-                ; Simpan dalam bentuk Base64 (Enkripsi Ringan)
-                FileOpen(CACHE_FILE, "w").Write(Base64Encode(rawJson))
-            }
+            Download(URL, TmpFile)
         } catch {
-            if !FileExist(CACHE_FILE) {
-                MsgBox("Gagal memverifikasi lisensi secara online.", "Error")
+            if !FileExist(TmpFile) {
+                MsgBox("Koneksi internet diperlukan untuk verifikasi.", "Offline", "Iconx")
                 ExitApp()
             }
         }
     }
 
-    ; Baca dan Verifikasi Lisensi
     try {
-        encodedData := FileRead(CACHE_FILE)
-        decodedJson := Base64Decode(encodedData)
-        
-        if !IsLicenseAllowed(decodedJson)
+        Konten := FileRead(TmpFile)
+       
+        ; 1. Cek Status Enabled
+        if !RegExMatch(Konten, '"enabled":\s*true') {
+            MsgBox("Program tidak lagi dapat digunakan. `n Untuk menggunakan kembali, konfirmasi manajer/spv untuk menghubungi saya via dm IG @bayurohmand.", "Akses Ditolak", "Iconx")
             ExitApp()
-    } catch {
-        MsgBox("Data lisensi rusak atau tidak valid.")
-        ExitApp()
-    }
-}
-
-; ==============================================================================
-; 4. MAIN SCRIPT (Logika Utama Anda di Sini)
-; ==============================================================================
-MsgBox("Aplikasi Berhasil Dijalankan!`nStatus: " (IsSkipped ? "Fast Boot (Skip Check)" : "Normal Boot (Checked)"), "Success")
-
-; Hotkey Contoh untuk Reload Cepat
-F5::FastReload()
-
-; Watchdog Contoh
-SetTimer(Watchdog, 15000)
-
-Watchdog() {
-    ; Jika butuh reload otomatis karena suatu kondisi:
-    if (A_TickCount > 0x7FFFFFF0)
-        FastReload()
-}
-
-; ==============================================================================
-; 5. FUNCTIONS
-; ==============================================================================
-
-FastReload() {
-    ; Menjalankan ulang script dengan parameter -skip
-    Run('"' A_AhkPath '" /f "' A_ScriptFullPath '" -skip')
-}
-
-IsLicenseAllowed(jsonContent) {
-    ; Cek Status Enabled
-    if InStr(jsonContent, '"enabled": false') {
-        ShowMessage(jsonContent)
-        return false
-    }
-    ; Cek Tanggal Expiry
-    if RegExMatch(jsonContent, '"expiry":\s*"([\d-]+)"', &m) {
-        if (FormatTime(, "yyyy-MM-dd") > m[1]) {
-            ShowMessage(jsonContent)
-            return false
         }
+
+        ; 2. Cek Expiry & Hitung Sisa Hari
+        if RegExMatch(Konten, '"expiry":\s*"([^"]+)"', &Match) {
+            TglExp := Match[1]
+            TglExpClean := StrReplace(TglExp, "-", "")
+           
+            ; Hitung selisih hari
+            Selisih := DateDiff(TglExpClean, HariIni, "Days")
+
+            if (Selisih < 0) {
+                RegExMatch(Konten, '"message":\s*"([^"]+)"', &Msg)
+                MsgBox(Msg ? Msg[1] : "Lisensi Expired! Untuk menggunakan kembali, konfirmasi manajer/spv untuk menghubungi saya via dm IG @bayurohmand.", "Expired", "Iconx")
+                ExitApp()
+            }
+
+            ; Jika ditekan manual (Ctrl+L)
+            if (ManualCheck) {
+                MsgBox("Status Lisensi: AKTIF`n`n dm IG @bayurohmand untuk pemesanan otomatisasi lainnya `n`nKadaluarsa: " TglExp "`nSisa: " Selisih " hari lagi.", "Info Lisensi", "Iconi")
+            }
+        }
+    } catch {
+        MsgBox("Gagal membaca data lisensi.", "Error", "Iconx")
+        if !ManualCheck
+            ExitApp()
     }
-    return true
 }
+^l:: VerifikasiLisensi(true)  ; Ctrl+L untuk cek lisensi manual
+; Jalankan verifikasi otomatis saat script pertama kali dibuka
+VerifikasiLisensi(false)
 
-ShowMessage(json) {
-    msg := RegExMatch(json, '"message":\s*"(.+?)"', &m) ? m[1] : "Akses ditolak."
-    MsgBox(msg, "Informasi Lisensi")
-}
-
-IsCacheValid(filePath, maxAge) {
-    if !FileExist(filePath)
-        return false
-    return DateDiff(A_NowUTC, FileGetTime(filePath, "M"), "Seconds") < maxAge
-}
-
-Base64Encode(string) {
-    static code := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    sLen := StrPut(string, "UTF-8")
-    buf := Buffer(sLen)
-    StrPut(string, buf, "UTF-8")
-    out := ""
-    i := 0
-    while (i < sLen - 1) {
-        v := (NumGet(buf, i, "UChar") << 16) | (NumGet(buf, i+1, "UChar") << 8) | NumGet(buf, i+2, "UChar")
-        out .= SubStr(code, ((v >> 18) & 63) + 1, 1) . SubStr(code, ((v >> 12) & 63) + 1, 1) 
-            .  SubStr(code, ((v >> 6) & 63) + 1, 1) . SubStr(code, (v & 63) + 1, 1)
-        i += 3
-    }
-    return out
-}
-
-Base64Decode(s) {
-    if !s
-        return ""
-    nLen := StrLen(s)
-    if !DllCall("crypt32\CryptStringToBinary", "Str", s, "UInt", nLen, "UInt", 1, "Ptr", 0, "UInt*", &outLen := 0, "Ptr", 0, "Ptr", 0)
-        return ""
-    buf := Buffer(outLen)
-    DllCall("crypt32\CryptStringToBinary", "Str", s, "UInt", nLen, "UInt", 1, "Ptr", buf, "UInt*", &outLen, "Ptr", 0, "Ptr", 0)
-    return StrGet(buf, outLen, "UTF-8")
-}
