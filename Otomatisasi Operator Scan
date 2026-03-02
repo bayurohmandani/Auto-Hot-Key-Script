@@ -24,7 +24,7 @@ global Situasi := "", TombolNew := "", noAL := "", KolomScanCode := "", toWareho
 ; ==============================================================================
 ; GUI SELECTION & AUTO-DETECTION
 ; ==============================================================================
-GuiA := Gui("+AlwaysOnTop", "@bayurohmand")
+GuiA := Gui("+AlwaysOnTop", "Automation for Scanning Operator | @bayurohmand")
 GuiA.SetFont("s12", "Segoe UI")
 GuiA.Add("Text", "Center w250", "PILIH VERSI SEMAR CLIENT")
 Dropdown := GuiA.Add("DropDownList", "w200 Choose2", ["Win7/r11", "Win10/r8", "Win10/r7", "Win11/r7"])
@@ -218,7 +218,7 @@ End:: {
         Loop 20 {
             try {
                 if (ControlGetText("Static1", semarProcess) = "Save Bill Success!") {
-                    Sleep 50
+                    Sleep 150
                     SendInput("{NumpadEnter}")
                     break
                 }
@@ -300,6 +300,8 @@ $NumpadAdd:: {
     else 
         Send "{NumpadAdd}"
 }
+
+^+R:: Reload
 
 !q:: ExitApp
 #SuspendExempt False
