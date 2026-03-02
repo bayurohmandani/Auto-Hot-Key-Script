@@ -1,81 +1,353 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+SetTitleMatchMode 2 ; Mengaktifkan pencarian judul jendela yang lebih fleksibel
 
-; Jalankan sebagai Admin agar tembus ke aplikasi ERP
-if not A_IsAdmin {
-    Run('*RunAs "' A_ScriptFullPath '"')
-    ExitApp()
+; ==============================================================================
+; GLOBAL VARIABLES
+; ==============================================================================
+global profile        := "r8"
+global global_buffer  := ""
+global tercetak       := 0
+global teks           := ""
+global teks2          := ""
+global jumlahAL       := 0
+global bijian         := 0
+global hasilAkhir     := 0
+global hasilAkhir2    := 0
+
+; Variabel Kontrol (Akan diisi oleh SetupProfile)
+global semarProcess := "", KelasSemar := "", KelasBerhasilAudit := "", KolomScan := ""
+global kolomToBranch := "", TombolSave := "", TombolPrint := "", TombolAudit := ""
+global Situasi := "", TombolNew := "", noAL := "", KolomScanCode := "", toWarehouse := ""
+
+
+; ==============================================================================
+; GUI SELECTION & AUTO-DETECTION
+; ==============================================================================
+GuiA := Gui("+AlwaysOnTop", "@bayurohmand")
+GuiA.SetFont("s12", "Segoe UI")
+GuiA.Add("Text", "Center w250", "PILIH VERSI SEMAR CLIENT")
+Dropdown := GuiA.Add("DropDownList", "w200 Choose2", ["Win7/r11", "Win10/r8", "Win10/r7", "Win11/r7"])
+
+; --- Logika Pendeteksi Otomatis ---
+isWin11 := (VerCompare(A_OSVersion, "10.0.22000") >= 0)
+
+if WinExist("ahk_class WindowsForms10.Window.8.app.0.141b42a_r11_ad1") {
+    Dropdown.Choose(1) ; Win7/r11
+} 
+else if WinExist("ahk_class WindowsForms10.Window.8.app.0.13965fa_r8_ad1") {
+    Dropdown.Choose(2) ; Win10/r8
+} 
+else if WinExist("ahk_class WindowsForms10.Window.8.app.0.13965fa_r7_ad1") {
+    ; Jika class r7 ditemukan, cek versi Windows-nya
+    if (isWin11)
+        Dropdown.Choose(4) ; Win11/r7
+    else
+        Dropdown.Choose(3) ; Win10/r7
 }
 
-; Inisialisasi InputHook
-ih := InputHook("V")
-ih.OnChar := CheckSequence
-ih.Start()
 
-global global_buffer := ""
+BtnLanjut := GuiA.Add("Button", "w200 Default", "Lanjut")
+BtnLanjut.OnEvent("Click", PilihAplikasi)
+GuiA.Show()
 
-; --- RESET LOGIC ---
-; Reset buffer setiap kali klik kiri (pindah kolom atau klik tombol Save/New)
-~LButton::ResetBuffer()
-
-; Reset buffer jika menekan Enter (setelah scan barcode atau submit)
-~Enter::ResetBuffer()
-
-; Reset buffer jika menekan Esc (batal)
-~Tab::ResetBuffer()
-~Esc::ResetBuffer()
-F5::Reload()
-ResetBuffer() {
-    global global_buffer
-    ih.Start()
-    global_buffer := ""
-}
-
-; --- DETEKSI KETIKAN ---
-CheckSequence(ih, char) {
-    global global_buffer
-    global_buffer .= char
+PilihAplikasi(*) {
+    global profile
+    switch Dropdown.Text {
+        case "Win7/r11" : profile := "r11"
+        case "Win10/r8" : profile := "r8"
+        case "Win10/r7" : profile := "r7"
+        case "Win11/r7" : profile := "11r7"
+    }
+    SetupProfile() ; Inisialisasi variabel berdasarkan pilihan
+    GuiA.Destroy()
     
-    ; Batasi buffer hanya 3 karakter terakhir
-    if StrLen(global_buffer) > 3
-        global_buffer := SubStr(global_buffer, -3)
-
-    ; Cek perintah
-    if (global_buffer = "0.1")
-        inputCommand("Tambahan")
-    else if (global_buffer = "0.2")
-        inputCommand("Duotambahan")
-    else if (global_buffer = "0.3")
-        inputCommand("Tretambahan")
-    else if (global_buffer = "0.4")
-        inputCommand("Batangan")
+    ; Jalankan verifikasi lisensi setelah pilih profil
+    if (profile != "r11")
+        VerifikasiLisensi(false)
 }
 
-; --- EKSEKUSI INPUT ---
-inputCommand(warehouse) {
-    ih.Stop()
-    global global_buffer
-    ;ih.Stop() ; Berhenti mendengarkan agar ketikan script tidak masuk buffer
+SetupProfile() {
+    global ; Menggunakan mode global untuk mengisi semua variabel di atas
     
-    ; Hapus pemicu "0.1"
-    SendEvent("{BackSpace 3}")
+    semarProcess       := "ahk_exe SemarClient.exe"
+    KelasBerhasilAudit := "ahk_class #32770"
+    KolomScanCode      := "48, 142"
+
+    if (profile = "r8") {
+        KelasSemar    := "ahk_class WindowsForms10.Window.8.app.0.13965fa_r8_ad1"
+        KolomScan     := "WindowsForms10.EDIT.app.0.13965fa_r8_ad16"
+        kolomToBranch := "WindowsForms10.EDIT.app.0.13965fa_r8_ad12"
+        TombolSave    := "WindowsForms10.BUTTON.app.0.13965fa_r8_ad18"
+        TombolPrint   := "WindowsForms10.BUTTON.app.0.13965fa_r8_ad17"
+        TombolAudit   := "WindowsForms10.BUTTON.app.0.13965fa_r8_ad16"
+        Situasi       := "WindowsForms10.STATIC.app.0.13965fa_r8_ad13"
+        TombolNew     := "WindowsForms10.BUTTON.app.0.13965fa_r8_ad19"
+        noAL          := "WindowsForms10.Window.b.app.0.13965fa_r8_ad15"
+        toWarehouse   := "WindowsForms10.EDIT.app.0.13965fa_r8_ad14"
+    }
+    else if (profile = "r7") {
+        KelasSemar    := "ahk_class WindowsForms10.Window.8.app.0.13965fa_r7_ad1"
+        KolomScan     := "WindowsForms10.EDIT.app.0.13965fa_r7_ad16"
+        kolomToBranch := "WindowsForms10.EDIT.app.0.13965fa_r7_ad13"
+        TombolSave    := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad18"
+        TombolPrint   := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad17"
+        TombolAudit   := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad16"
+        Situasi       := "WindowsForms10.STATIC.app.0.13965fa_r7_ad13"
+        TombolNew     := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad19"
+        noAL          := "WindowsForms10.Window.b.app.0.13965fa_r7_ad19"
+        toWarehouse   := "WindowsForms10.EDIT.app.0.13965fa_r7_ad15"
+    }
+    else if (profile = "r11") {
+        KelasSemar    := "ahk_class WindowsForms10.Window.8.app.0.141b42a_r11_ad1"
+        KolomScan     := "WindowsForms10.EDIT.app.0.141b42a_r11_ad15"
+        kolomToBranch := "WindowsForms10.EDIT.app.0.141b42a_r11_ad12"
+        TombolSave    := "WindowsForms10.BUTTON.app.0.141b42a_r11_ad18"
+        TombolPrint   := "WindowsForms10.BUTTON.app.0.141b42a_r11_ad17"
+        TombolAudit   := "WindowsForms10.BUTTON.app.0.141b42a_r11_ad19"
+        Situasi       := "WindowsForms10.STATIC.app.0.141b42a_r11_ad13"
+        TombolNew     := "WindowsForms10.BUTTON.app.0.141b42a_r11_ad19"
+        noAL          := "WindowsForms10.Window.b.app.0.141b42a_r11_ad15"
+        toWarehouse   := "WindowsForms10.EDIT.app.0.141b42a_r11_ad14"
+    }
+    else if (profile = "11r7") {
+        KelasSemar    := "ahk_class WindowsForms10.Window.8.app.0.13965fa_r7_ad1"
+        KolomScan     := "WindowsForms10.EDIT.app.0.13965fa_r7_ad15"
+        kolomToBranch := "WindowsForms10.EDIT.app.0.13965fa_r7_ad12"
+        TombolSave    := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad18"
+        TombolPrint   := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad17"
+        TombolAudit   := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad16"
+        Situasi       := "WindowsForms10.STATIC.app.0.13965fa_r7_ad13"
+        TombolNew     := "WindowsForms10.BUTTON.app.0.13965fa_r7_ad19"
+        noAL          := "WindowsForms10.Window.b.app.0.13965fa_r7_ad15"
+        toWarehouse   := "WindowsForms10.EDIT.app.0.13965fa_r7_ad14"
+    }
+
+}
+
+; ==============================================================================
+; HOTKEYS & FUNCTIONS
+; ==============================================================================
+
+$Numpad1:: hewer("Tambah", "{Numpad1}")
+$Numpad2:: hewer("Duotam", "{Numpad2}")
+$Numpad3:: hewer("Tretam", "{Numpad3}")
+$Numpad4:: hewer("Batang", "{Numpad4}")
+
+hewer(werhos, salah) {
+    try {
+        fokus := ControlGetClassNN(ControlGetFocus("A"))
+        if (fokus = kolomToBranch) {
+            SendInput "onli{Tab}" werhos "{Tab}"
+        } else if (fokus = toWarehouse) {
+            SendInput werhos "{Tab}"
+        } else {
+            Send(salah)
+        }
+    } catch {
+        Send(salah)
+    }
+}
+
+; --- AUDITING ---
+NumpadIns:: Auditing()
+
+~Enter:: {
+    if WinActive(semarProcess) {
+        global bijian
+        bijian++
+    }
+}
+
+Auditing() {
+    if !WinExist(KelasSemar)
+        return
+
+    ControlClick(TombolAudit, KelasSemar)
+    
+    if WinWaitActive("Confirm Message", , 2) {
+        Sleep 100
+        ControlClick("Button1", "Confirm Message")
+        Send("{Space}")
+    }
+    
+    if WinWaitActive(KelasBerhasilAudit, , 3) {
+        Loop 20 { ; Timeout loop agar tidak stuck selamanya
+            try {
+                if (ControlGetText("Static1", semarProcess) = "Audit Bill Success!") {
+                    Sleep 50
+                    SendInput("{NumpadEnter}")
+                    break
+                }
+            }
+            Sleep 100
+        }
+    }
+
+    try {
+        Sleep 300
+        if (ControlGetText(Situasi, semarProcess) = "Audit") {
+            ControlClick(TombolNew, KelasSemar)
+            Sleep 50
+            ControlFocus(KolomScan, KelasSemar)
+        } else {
+            MsgBox("Belum di AUDIT`nCek stock atau ulangi jika jaringan buruk", "Info", "Icon!")
+        }
+    }
+}
+
+NumpadDel:: newAudit()
+
+newAudit() {
+    try {
+        ControlClick(TombolNew, KelasSemar)
+        Sleep 100
+        ControlFocus(KolomScan, KelasSemar)
+    }
+}
+
+; --- SCANNING & PRINTING ---
+End:: {    
+    global tercetak, teks, teks2, jumlahAL, hasilAkhir, hasilAkhir2, bijian
+    if !WinExist(KelasSemar)
+        return
+
+    ControlClick(TombolSave, KelasSemar)
+    
+    if WinWaitActive(KelasBerhasilAudit, , 3) {
+        Loop 20 {
+            try {
+                if (ControlGetText("Static1", semarProcess) = "Save Bill Success!") {
+                    Sleep 50
+                    SendInput("{NumpadEnter}")
+                    break
+                }
+            }
+            Sleep 100
+        }
+    }
+
+    teks2 := teks
+    hasilAkhir2 := hasilAkhir
+    hasilAkhir += bijian
+    jumlahAL++
+    
+    WinWaitActive(KelasSemar, , 2)
+    Sleep(350)
+    
+    try {
+        teks := ControlGetText(noAL, KelasSemar)
+    }
+    
     Sleep(50)
+    ControlClick(TombolPrint, KelasSemar)
     
-    ; Atur kecepatan ketik (Sesuaikan 40ms jika ERP Anda lambat)
-    SetKeyDelay(5, 5)
+    ToolTip("> " hasilAkhir "/" jumlahAL " | " teks "`n" hasilAkhir2 "/" jumlahAL-1 " | " teks2, 0, 0)
     
-    ; Isi Branch
-    SendEvent("Online")
-    Sleep(50) ; Jeda agar dropdown ERP muncul
-    Send("{Tab}")
-    
-    ; Isi Warehouse
-    Sleep(50)
-    SendEvent(warehouse)
-    Sleep(50)
-    Send("{Tab}")
-    
-    ; Selesai, kosongkan buffer dan mulai rekam lagi
-    global_buffer := ""
-    ih.Start()
+    if WinWaitActive("ProgressForm", , 5) {
+        tercetak := 1
+        Sleep(500)
+        bijian := 0
+        kliknew()
+    }
 }
+
+^!V:: SendInput(teks)
+
+Home:: {
+    global tercetak
+    ControlClick(TombolNew, KelasSemar)
+    Sleep(100)
+    ControlFocus(kolomToBranch, KelasSemar)
+    tercetak := 0
+}
+
+Pgdn:: kliknew()
+
+kliknew() {
+    global tercetak
+    if (tercetak = 1) {
+        WinWaitActive(KelasSemar)
+        Loop 20 {
+            try {
+                if (StrLen(ControlGetText(Situasi, semarProcess)) > 2)
+                    break
+            }
+            Sleep 100
+        }
+        Sleep(200)
+        ControlClick(TombolNew, KelasSemar)
+        Sleep(100)
+        ControlFocus(kolomToBranch, KelasSemar)
+        tercetak := 0
+    }
+}
+
+; ==============================================================================
+; EMERGENCY & LICENSE
+; ==============================================================================
+#SuspendExempt
+F12:: {
+    Suspend(-1)
+    status := A_IsSuspended ? "TERJEDA" : "AKTIF"
+    ToolTip("PERCEPATAN SAAT INI " status, 100, 100)
+    SetTimer(() => ToolTip(), -1500)
+}
+
+$NumpadAdd:: {
+    if WinActive("Sortir Pintar") 
+        SendInput "{Tab}"
+    else 
+        Send "{NumpadAdd}"
+}
+
+!q:: ExitApp
+#SuspendExempt False
+
+VerifikasiLisensi(ManualCheck := false) {
+    static URL := "https://raw.githubusercontent.com/bayurohmandani/Auto-Hot-Key-Script/main/opscanner.json"
+    local TmpDir := EnvGet("TEMP") "\SemarAutomation"
+    local TmpFile := TmpDir "\license_cache.json"
+    local HariIni := FormatTime(, "yyyyMMdd")
+    
+    if !DirExist(TmpDir)
+        DirCreate(TmpDir)
+
+    DownloadBaru := ManualCheck
+    if !DownloadBaru && FileExist(TmpFile) {
+        if (SubStr(FileGetTime(TmpFile, "M"), 1, 8) != HariIni) 
+            DownloadBaru := true
+    } else {
+        DownloadBaru := true
+    }
+
+    if (DownloadBaru) {
+        try Download(URL, TmpFile)
+        catch {
+            if !FileExist(TmpFile) {
+                MsgBox("Koneksi internet diperlukan.", "Offline", "Iconx")
+                ExitApp()
+            }
+        }
+    }
+
+    try {
+        Konten := FileRead(TmpFile)
+        if !RegExMatch(Konten, '"enabled":\s*true') {
+            MsgBox("Program dinonaktifkan. Hubungi @bayurohmand.", "Ditolak", "Iconx")
+            ExitApp()
+        }
+
+        if RegExMatch(Konten, '"expiry":\s*"([^"]+)"', &Match) {
+            Selisih := DateDiff(StrReplace(Match[1], "-", ""), HariIni, "Days")
+            if (Selisih < 0) {
+                MsgBox("Lisensi Expired!", "Expired", "Iconx")
+                ExitApp()
+            }
+            if (ManualCheck)
+                MsgBox("Status: AKTIF`nExpired: " Match[1] "`nSisa: " Selisih " hari.", "Info", "Iconi")
+        }
+    }
+}
+
+^l:: VerifikasiLisensi(true)
