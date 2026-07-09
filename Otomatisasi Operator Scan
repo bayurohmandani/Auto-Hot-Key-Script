@@ -75,7 +75,13 @@ else if WinExist("ahk_class WindowsForms10.Window.8.app.0.13965fa_r7_ad1") {
 
 BtnContinue := GuiA.Add("Button", "w200 Default", "Continue")
 BtnContinue.OnEvent("Click", SelectApplication)
+
+; --- (HAK CIPTA) ---
+GuiA.SetFont("s8 italic", "Segoe UI") 
+GuiA.Add("Text", "w200 Center cGray", "Hak Cipta Milik Bayu Rohmandani`nIG: @bayurohmand")
+
 GuiA.Show()
+
 
 SelectApplication(*) {
     global profile
